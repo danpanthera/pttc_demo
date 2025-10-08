@@ -165,7 +165,7 @@ if uploaded_file is not None:
                 ]
             }).to_markdown(index=False) 
 #nút Yêu cầu AI phân tích
-            if st.button("Yêu cầu AI Phân tích"):
+if st.button("Yêu cầu AI Phân tích"):
     api_key = st.secrets.get("GEMINI_API_KEY") 
     
     if api_key:
