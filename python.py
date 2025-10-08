@@ -54,7 +54,7 @@ def get_ai_analysis(data_for_ai, api_key):
     """Gửi dữ liệu đến Gemini và nhận phản hồi."""
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
 
         prompt = f"""
         Bạn là chuyên gia phân tích tài chính. Hãy viết nhận xét 3–4 đoạn
