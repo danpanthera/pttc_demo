@@ -172,15 +172,45 @@ if uploaded_file is not None:
         with st.spinner('Đang gửi dữ liệu và chờ Gemini phân tích...'):
             ai_result = get_ai_analysis(data_for_ai, api_key)
 
-            st.markdown("## 📈 Dashboard Phân tích Tài chính")
+            # -------------------- DASHBOARD TỔNG HỢP KPI --------------------
+            st.markdown("## 🧭 Dashboard Tổng Hợp Chỉ Số Tài Chính")
             st.divider()
+
+            # --- Chuẩn bị dữ liệu cho các KPI ---
+            tong_tai_san = df_processed[df_processed['Chỉ tiêu'].str.contains('TỔNG CỘNG TÀI SẢN', case=False, na=False)]
+            tai_san_ngan_han = df_processed[df_processed['Chỉ tiêu'].str.contains('TÀI SẢN NGẮN HẠN', case=False, na=False)]
+            no_ngan_han = df_processed[df_processed['Chỉ tiêu'].str.contains('NỢ NGẮN HẠN', case=False, na=False)]
+
+            kpi_data = {
+                "Tổng tài sản (Năm sau)": f"{tong_tai_san['Năm sau'].iloc[0]:,.0f}" if not tong_tai_san.empty else "N/A",
+                "Tài sản ngắn hạn (Năm sau)": f"{tai_san_ngan_han['Năm sau'].iloc[0]:,.0f}" if not tai_san_ngan_han.empty else "N/A",
+                "Nợ ngắn hạn (Năm sau)": f"{no_ngan_han['Năm sau'].iloc[0]:,.0f}" if not no_ngan_han.empty else "N/A",
+                "Tốc độ tăng trưởng TB (%)": f"{df_processed['Tốc độ tăng trưởng (%)'].mean():.2f}%",
+                "Tỷ trọng TS ngắn hạn (%)": f"{tai_san_ngan_han['Tỷ trọng Năm sau (%)'].iloc[0]:.2f}%" if not tai_san_ngan_han.empty else "N/A",
+                "Hệ số thanh toán hiện hành": f"{thanh_toan_hien_hanh_N:.2f}" if isinstance(thanh_toan_hien_hanh_N, (int, float)) else "N/A"
+            }
+
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Tổng tài sản (Năm sau)", kpi_data["Tổng tài sản (Năm sau)"])
+                st.metric("Tốc độ tăng trưởng TB (%)", kpi_data["Tốc độ tăng trưởng TB (%)"])
+            with col2:
+                st.metric("Tài sản ngắn hạn (Năm sau)", kpi_data["Tài sản ngắn hạn (Năm sau)"])
+                st.metric("Tỷ trọng TS ngắn hạn (%)", kpi_data["Tỷ trọng TS ngắn hạn (%)"])
+            with col3:
+                st.metric("Nợ ngắn hạn (Năm sau)", kpi_data["Nợ ngắn hạn (Năm sau)"])
+                st.metric("Hệ số thanh toán hiện hành", kpi_data["Hệ số thanh toán hiện hành"])
+
+            # -------------------- BIỂU ĐỒ PHÂN TÍCH --------------------
+            st.divider()
+            st.markdown("## 📊 Biểu đồ Phân tích Chi tiết")
 
             # --- Biểu đồ 1: So sánh Năm trước - Năm sau ---
             st.subheader("🔹 So sánh giá trị Năm trước và Năm sau")
             chart_data = df_processed[['Chỉ tiêu', 'Năm trước', 'Năm sau']].set_index('Chỉ tiêu')
             st.bar_chart(chart_data, use_container_width=True)
 
-            # --- Biểu đồ 2: Cơ cấu Tài sản (Tỷ trọng) ---
+            # --- Biểu đồ 2: Cơ cấu Tài sản Năm sau (Tỷ trọng %) ---
             st.subheader("🔹 Cơ cấu Tài sản Năm sau (Tỷ trọng %)")
             pie_data = df_processed[['Chỉ tiêu', 'Tỷ trọng Năm sau (%)']]
             pie_data = pie_data[~pie_data['Chỉ tiêu'].str.contains('TỔNG CỘNG', case=False, na=False)]  # loại bỏ tổng cộng
@@ -194,18 +224,19 @@ if uploaded_file is not None:
             )
             st.plotly_chart(fig, use_container_width=True)
 
-            # --- Biểu đồ 3: Tốc độ tăng trưởng ---
+            # --- Biểu đồ 3: Tốc độ Tăng trưởng ---
             st.subheader("🔹 Tốc độ Tăng trưởng (%)")
             growth_chart = df_processed[['Chỉ tiêu', 'Tốc độ tăng trưởng (%)']].set_index('Chỉ tiêu')
             st.line_chart(growth_chart, use_container_width=True)
 
-            # --- Nhận xét từ Gemini AI ---
+            # -------------------- NHẬN XÉT TỪ GEMINI AI --------------------
             st.divider()
-            st.markdown("## 🤖 Nhận xét Từ Gemini AI")
+            st.markdown("## 🤖 Nhận xét Phân tích từ Gemini AI")
             st.info(ai_result)
 
     else:
         st.error("Lỗi: Không tìm thấy Khóa API. Vui lòng cấu hình Khóa 'GEMINI_API_KEY' trong Streamlit Secrets.")
+
 
 
     except ValueError as ve:
