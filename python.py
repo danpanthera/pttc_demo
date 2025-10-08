@@ -164,17 +164,49 @@ if uploaded_file is not None:
                     f"{thanh_toan_hien_hanh_N}"
                 ]
             }).to_markdown(index=False) 
-
+#nút Yêu cầu AI phân tích
             if st.button("Yêu cầu AI Phân tích"):
-                api_key = st.secrets.get("GEMINI_API_KEY") 
-                
-                if api_key:
-                    with st.spinner('Đang gửi dữ liệu và chờ Gemini phân tích...'):
-                        ai_result = get_ai_analysis(data_for_ai, api_key)
-                        st.markdown("**Kết quả Phân tích từ Gemini AI:**")
-                        st.info(ai_result)
-                else:
-                     st.error("Lỗi: Không tìm thấy Khóa API. Vui lòng cấu hình Khóa 'GEMINI_API_KEY' trong Streamlit Secrets.")
+    api_key = st.secrets.get("GEMINI_API_KEY") 
+    
+    if api_key:
+        with st.spinner('Đang gửi dữ liệu và chờ Gemini phân tích...'):
+            ai_result = get_ai_analysis(data_for_ai, api_key)
+
+            st.markdown("## 📈 Dashboard Phân tích Tài chính")
+            st.divider()
+
+            # --- Biểu đồ 1: So sánh Năm trước - Năm sau ---
+            st.subheader("🔹 So sánh giá trị Năm trước và Năm sau")
+            chart_data = df_processed[['Chỉ tiêu', 'Năm trước', 'Năm sau']].set_index('Chỉ tiêu')
+            st.bar_chart(chart_data, use_container_width=True)
+
+            # --- Biểu đồ 2: Cơ cấu Tài sản (Tỷ trọng) ---
+            st.subheader("🔹 Cơ cấu Tài sản Năm sau (Tỷ trọng %)")
+            pie_data = df_processed[['Chỉ tiêu', 'Tỷ trọng Năm sau (%)']]
+            pie_data = pie_data[~pie_data['Chỉ tiêu'].str.contains('TỔNG CỘNG', case=False, na=False)]  # loại bỏ tổng cộng
+
+            import plotly.express as px
+            fig = px.pie(
+                pie_data,
+                values='Tỷ trọng Năm sau (%)',
+                names='Chỉ tiêu',
+                title='Cơ cấu Tài sản Năm sau (%)'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+            # --- Biểu đồ 3: Tốc độ tăng trưởng ---
+            st.subheader("🔹 Tốc độ Tăng trưởng (%)")
+            growth_chart = df_processed[['Chỉ tiêu', 'Tốc độ tăng trưởng (%)']].set_index('Chỉ tiêu')
+            st.line_chart(growth_chart, use_container_width=True)
+
+            # --- Nhận xét từ Gemini AI ---
+            st.divider()
+            st.markdown("## 🤖 Nhận xét Từ Gemini AI")
+            st.info(ai_result)
+
+    else:
+        st.error("Lỗi: Không tìm thấy Khóa API. Vui lòng cấu hình Khóa 'GEMINI_API_KEY' trong Streamlit Secrets.")
+
 
     except ValueError as ve:
         st.error(f"Lỗi cấu trúc dữ liệu: {ve}")
