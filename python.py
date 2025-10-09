@@ -119,7 +119,7 @@ def get_ai_analysis(data_df, ratios, api_key):
     """
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        model = genai.GenerativeModel("gemini-2.5-flash-latest")
 
         # Tạo prompt chi tiết để Gemini đưa ra câu trả lời chất lượng nhất
         prompt = f"""
